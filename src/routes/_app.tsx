@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import * as React from "react";
 import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/AppShell";
@@ -31,9 +31,5 @@ function AppLayout() {
     );
   }
 
-  return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
-  );
+  return <AppShell />;
 }
