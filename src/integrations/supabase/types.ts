@@ -101,6 +101,13 @@ export type Database = {
             referencedRelation: "insumos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ficha_itens_insumo_id_fkey"
+            columns: ["insumo_id"]
+            isOneToOne: false
+            referencedRelation: "v_alertas_estoque"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fichas_tecnicas: {
@@ -240,6 +247,225 @@ export type Database = {
           },
         ]
       }
+      movimentos_estoque: {
+        Row: {
+          created_at: string
+          custo_total: number
+          custo_unitario: number
+          data_movimento: string
+          documento: string | null
+          fornecedor_id: string | null
+          id: string
+          insumo_id: string
+          observacoes: string | null
+          ordem_producao_id: string | null
+          quantidade: number
+          registrado_por: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimento"]
+        }
+        Insert: {
+          created_at?: string
+          custo_total?: number
+          custo_unitario?: number
+          data_movimento?: string
+          documento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          insumo_id: string
+          observacoes?: string | null
+          ordem_producao_id?: string | null
+          quantidade: number
+          registrado_por?: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimento"]
+        }
+        Update: {
+          created_at?: string
+          custo_total?: number
+          custo_unitario?: number
+          data_movimento?: string
+          documento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          insumo_id?: string
+          observacoes?: string | null
+          ordem_producao_id?: string | null
+          quantidade?: number
+          registrado_por?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_movimento"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentos_estoque_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentos_estoque_insumo_id_fkey"
+            columns: ["insumo_id"]
+            isOneToOne: false
+            referencedRelation: "insumos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentos_estoque_insumo_id_fkey"
+            columns: ["insumo_id"]
+            isOneToOne: false
+            referencedRelation: "v_alertas_estoque"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordem_itens: {
+        Row: {
+          created_at: string
+          custo_previsto: number
+          ficha_id: string
+          id: string
+          observacoes: string | null
+          ordem_id: string
+          porcoes_consumidas: number | null
+          porcoes_previstas: number
+          porcoes_produzidas: number | null
+          sobras: number | null
+        }
+        Insert: {
+          created_at?: string
+          custo_previsto?: number
+          ficha_id: string
+          id?: string
+          observacoes?: string | null
+          ordem_id: string
+          porcoes_consumidas?: number | null
+          porcoes_previstas?: number
+          porcoes_produzidas?: number | null
+          sobras?: number | null
+        }
+        Update: {
+          created_at?: string
+          custo_previsto?: number
+          ficha_id?: string
+          id?: string
+          observacoes?: string | null
+          ordem_id?: string
+          porcoes_consumidas?: number | null
+          porcoes_previstas?: number
+          porcoes_produzidas?: number | null
+          sobras?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordem_itens_ficha_id_fkey"
+            columns: ["ficha_id"]
+            isOneToOne: false
+            referencedRelation: "fichas_tecnicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordem_itens_ordem_id_fkey"
+            columns: ["ordem_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_producao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordens_producao: {
+        Row: {
+          cmv_previsto_pct: number | null
+          cmv_real_pct: number | null
+          created_at: string
+          criado_por: string | null
+          custo_previsto: number
+          custo_real: number | null
+          data_operacao: string
+          faturamento_real: number | null
+          id: string
+          observacoes: string | null
+          origem: string
+          pessoas_esperadas: number
+          pessoas_reais: number | null
+          status: Database["public"]["Enums"]["status_ordem"]
+          ticket_medio: number
+          updated_at: string
+        }
+        Insert: {
+          cmv_previsto_pct?: number | null
+          cmv_real_pct?: number | null
+          created_at?: string
+          criado_por?: string | null
+          custo_previsto?: number
+          custo_real?: number | null
+          data_operacao?: string
+          faturamento_real?: number | null
+          id?: string
+          observacoes?: string | null
+          origem?: string
+          pessoas_esperadas?: number
+          pessoas_reais?: number | null
+          status?: Database["public"]["Enums"]["status_ordem"]
+          ticket_medio?: number
+          updated_at?: string
+        }
+        Update: {
+          cmv_previsto_pct?: number | null
+          cmv_real_pct?: number | null
+          created_at?: string
+          criado_por?: string | null
+          custo_previsto?: number
+          custo_real?: number | null
+          data_operacao?: string
+          faturamento_real?: number | null
+          id?: string
+          observacoes?: string | null
+          origem?: string
+          pessoas_esperadas?: number
+          pessoas_reais?: number | null
+          status?: Database["public"]["Enums"]["status_ordem"]
+          ticket_medio?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      parametros_demanda: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          ficha_id: string
+          id: string
+          peso_dia_semana: number
+          porcoes_por_pessoa: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          ficha_id: string
+          id?: string
+          peso_dia_semana?: number
+          porcoes_por_pessoa?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          ficha_id?: string
+          id?: string
+          peso_dia_semana?: number
+          porcoes_por_pessoa?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parametros_demanda_ficha_id_fkey"
+            columns: ["ficha_id"]
+            isOneToOne: true
+            referencedRelation: "fichas_tecnicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -287,9 +513,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_alertas_estoque: {
+        Row: {
+          custo_medio: number | null
+          estoque_atual: number | null
+          fornecedor_nome: string | null
+          id: string | null
+          nivel: string | null
+          nome: string | null
+          ponto_reposicao: number | null
+          unidade: Database["public"]["Enums"]["unidade_medida"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      gerar_ordem_producao: {
+        Args: {
+          _data: string
+          _origem?: string
+          _pessoas: number
+          _ticket?: number
+        }
+        Returns: string
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -305,6 +552,18 @@ export type Database = {
     Enums: {
       app_role: "admin" | "gerente" | "cozinha" | "estoque"
       categoria_ficha: "pizza" | "cozinha" | "sobremesa" | "bebida" | "salgado"
+      status_ordem:
+        | "rascunho"
+        | "confirmada"
+        | "em_producao"
+        | "concluida"
+        | "cancelada"
+      tipo_movimento:
+        | "entrada_compra"
+        | "saida_producao"
+        | "ajuste_inventario"
+        | "perda"
+        | "transferencia"
       unidade_medida: "kg" | "g" | "l" | "ml" | "un" | "pct" | "cx" | "dz"
     }
     CompositeTypes: {
@@ -435,6 +694,20 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "gerente", "cozinha", "estoque"],
       categoria_ficha: ["pizza", "cozinha", "sobremesa", "bebida", "salgado"],
+      status_ordem: [
+        "rascunho",
+        "confirmada",
+        "em_producao",
+        "concluida",
+        "cancelada",
+      ],
+      tipo_movimento: [
+        "entrada_compra",
+        "saida_producao",
+        "ajuste_inventario",
+        "perda",
+        "transferencia",
+      ],
       unidade_medida: ["kg", "g", "l", "ml", "un", "pct", "cx", "dz"],
     },
   },
