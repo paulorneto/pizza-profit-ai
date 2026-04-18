@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppProducaoRouteImport } from './routes/_app.producao'
 import { Route as AppInsumosRouteImport } from './routes/_app.insumos'
 import { Route as AppFornecedoresRouteImport } from './routes/_app.fornecedores'
 import { Route as AppFichasRouteImport } from './routes/_app.fichas'
+import { Route as AppEstoqueRouteImport } from './routes/_app.estoque'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
+import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
 import { Route as AppCardapioRouteImport } from './routes/_app.cardapio'
 
 const AuthRoute = AuthRouteImport.update({
@@ -30,6 +33,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProducaoRoute = AppProducaoRouteImport.update({
+  id: '/producao',
+  path: '/producao',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInsumosRoute = AppInsumosRouteImport.update({
@@ -47,9 +55,19 @@ const AppFichasRoute = AppFichasRouteImport.update({
   path: '/fichas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEstoqueRoute = AppEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEquipeRoute = AppEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDemandaRoute = AppDemandaRouteImport.update({
+  id: '/demanda',
+  path: '/demanda',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCardapioRoute = AppCardapioRouteImport.update({
@@ -62,18 +80,24 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
   '/cardapio': typeof AppCardapioRoute
+  '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
+  '/estoque': typeof AppEstoqueRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
+  '/producao': typeof AppProducaoRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cardapio': typeof AppCardapioRoute
+  '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
+  '/estoque': typeof AppEstoqueRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
+  '/producao': typeof AppProducaoRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -81,10 +105,13 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/cardapio': typeof AppCardapioRoute
+  '/_app/demanda': typeof AppDemandaRoute
   '/_app/equipe': typeof AppEquipeRoute
+  '/_app/estoque': typeof AppEstoqueRoute
   '/_app/fichas': typeof AppFichasRoute
   '/_app/fornecedores': typeof AppFornecedoresRoute
   '/_app/insumos': typeof AppInsumosRoute
+  '/_app/producao': typeof AppProducaoRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -93,28 +120,37 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cardapio'
+    | '/demanda'
     | '/equipe'
+    | '/estoque'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
+    | '/producao'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
     | '/cardapio'
+    | '/demanda'
     | '/equipe'
+    | '/estoque'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
+    | '/producao'
     | '/'
   id:
     | '__root__'
     | '/_app'
     | '/auth'
     | '/_app/cardapio'
+    | '/_app/demanda'
     | '/_app/equipe'
+    | '/_app/estoque'
     | '/_app/fichas'
     | '/_app/fornecedores'
     | '/_app/insumos'
+    | '/_app/producao'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -146,6 +182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/producao': {
+      id: '/_app/producao'
+      path: '/producao'
+      fullPath: '/producao'
+      preLoaderRoute: typeof AppProducaoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/insumos': {
       id: '/_app/insumos'
       path: '/insumos'
@@ -167,11 +210,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFichasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/estoque': {
+      id: '/_app/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof AppEstoqueRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/equipe': {
       id: '/_app/equipe'
       path: '/equipe'
       fullPath: '/equipe'
       preLoaderRoute: typeof AppEquipeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/demanda': {
+      id: '/_app/demanda'
+      path: '/demanda'
+      fullPath: '/demanda'
+      preLoaderRoute: typeof AppDemandaRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/cardapio': {
@@ -186,19 +243,25 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCardapioRoute: typeof AppCardapioRoute
+  AppDemandaRoute: typeof AppDemandaRoute
   AppEquipeRoute: typeof AppEquipeRoute
+  AppEstoqueRoute: typeof AppEstoqueRoute
   AppFichasRoute: typeof AppFichasRoute
   AppFornecedoresRoute: typeof AppFornecedoresRoute
   AppInsumosRoute: typeof AppInsumosRoute
+  AppProducaoRoute: typeof AppProducaoRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCardapioRoute: AppCardapioRoute,
+  AppDemandaRoute: AppDemandaRoute,
   AppEquipeRoute: AppEquipeRoute,
+  AppEstoqueRoute: AppEstoqueRoute,
   AppFichasRoute: AppFichasRoute,
   AppFornecedoresRoute: AppFornecedoresRoute,
   AppInsumosRoute: AppInsumosRoute,
+  AppProducaoRoute: AppProducaoRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
