@@ -223,7 +223,7 @@ function FechamentoForm({
       _pessoas_reais: p,
       _faturamento_real: f,
       _itens_reais: itens_reais as any,
-      _observacoes: obs || null,
+      _observacoes: obs || undefined,
     });
     setSaving(false);
 

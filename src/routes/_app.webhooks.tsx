@@ -205,12 +205,15 @@ function NovoTokenForm({ onCreated }: { onCreated: (token: string, nome: string)
     e.preventDefault();
     if (!nome.trim()) return toast.error("Nome obrigatório");
     setSaving(true);
-    const expira = diasExp
-      ? new Date(Date.now() + Number(diasExp) * 86400000).toISOString()
-      : null;
     const { data, error } = await supabase.rpc("gerar_token_webhook", {
       _nome: nome.trim(),
-      _expira_em: expira,
+      ...(diasExp
+        ? {
+            _expira_em: new Date(
+              Date.now() + Number(diasExp) * 86400000,
+            ).toISOString(),
+          }
+        : {}),
     });
     setSaving(false);
     if (error) return toast.error(error.message);
