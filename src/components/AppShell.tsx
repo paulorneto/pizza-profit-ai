@@ -15,6 +15,8 @@ import {
   Boxes,
   Gauge,
   Flame,
+  ClipboardCheck,
+  Webhook,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -31,12 +33,14 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "gerente", "cozinha", "estoque"] },
   { to: "/producao", label: "Motor de Produção", icon: Flame, roles: ["admin", "gerente", "cozinha"] },
+  { to: "/fechamento", label: "Fechamento do Dia", icon: ClipboardCheck, roles: ["admin", "gerente", "cozinha"] },
   { to: "/estoque", label: "Estoque", icon: Boxes, roles: ["admin", "gerente", "estoque"] },
   { to: "/insumos", label: "Insumos", icon: Package, roles: ["admin", "gerente", "estoque"] },
   { to: "/fornecedores", label: "Fornecedores", icon: Truck, roles: ["admin", "gerente", "estoque"] },
   { to: "/fichas", label: "Fichas Técnicas", icon: ChefHat, roles: ["admin", "gerente", "cozinha"] },
   { to: "/cardapio", label: "Cardápio do Buffet", icon: UtensilsCrossed, roles: ["admin", "gerente", "cozinha"] },
   { to: "/demanda", label: "Parâmetros de Demanda", icon: Gauge, roles: ["admin", "gerente"] },
+  { to: "/webhooks", label: "Webhooks n8n", icon: Webhook, roles: ["admin"] },
   { to: "/equipe", label: "Equipe & Acessos", icon: Users, roles: ["admin"] },
 ];
 

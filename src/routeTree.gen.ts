@@ -12,14 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppWebhooksRouteImport } from './routes/_app.webhooks'
 import { Route as AppProducaoRouteImport } from './routes/_app.producao'
 import { Route as AppInsumosRouteImport } from './routes/_app.insumos'
 import { Route as AppFornecedoresRouteImport } from './routes/_app.fornecedores'
 import { Route as AppFichasRouteImport } from './routes/_app.fichas'
+import { Route as AppFechamentoRouteImport } from './routes/_app.fechamento'
 import { Route as AppEstoqueRouteImport } from './routes/_app.estoque'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
 import { Route as AppCardapioRouteImport } from './routes/_app.cardapio'
+import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -33,6 +36,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWebhooksRoute = AppWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProducaoRoute = AppProducaoRouteImport.update({
@@ -55,6 +63,11 @@ const AppFichasRoute = AppFichasRouteImport.update({
   path: '/fichas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFechamentoRoute = AppFechamentoRouteImport.update({
+  id: '/fechamento',
+  path: '/fechamento',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEstoqueRoute = AppEstoqueRouteImport.update({
   id: '/estoque',
   path: '/estoque',
@@ -75,6 +88,11 @@ const AppCardapioRoute = AppCardapioRouteImport.update({
   path: '/cardapio',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
+  id: '/api/webhooks/n8n',
+  path: '/api/webhooks/n8n',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -83,10 +101,13 @@ export interface FileRoutesByFullPath {
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
+  '/fechamento': typeof AppFechamentoRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/webhooks': typeof AppWebhooksRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -94,11 +115,14 @@ export interface FileRoutesByTo {
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
+  '/fechamento': typeof AppFechamentoRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/webhooks': typeof AppWebhooksRoute
   '/': typeof AppIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,11 +132,14 @@ export interface FileRoutesById {
   '/_app/demanda': typeof AppDemandaRoute
   '/_app/equipe': typeof AppEquipeRoute
   '/_app/estoque': typeof AppEstoqueRoute
+  '/_app/fechamento': typeof AppFechamentoRoute
   '/_app/fichas': typeof AppFichasRoute
   '/_app/fornecedores': typeof AppFornecedoresRoute
   '/_app/insumos': typeof AppInsumosRoute
   '/_app/producao': typeof AppProducaoRoute
+  '/_app/webhooks': typeof AppWebhooksRoute
   '/_app/': typeof AppIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -123,10 +150,13 @@ export interface FileRouteTypes {
     | '/demanda'
     | '/equipe'
     | '/estoque'
+    | '/fechamento'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/webhooks'
+    | '/api/webhooks/n8n'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -134,11 +164,14 @@ export interface FileRouteTypes {
     | '/demanda'
     | '/equipe'
     | '/estoque'
+    | '/fechamento'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/webhooks'
     | '/'
+    | '/api/webhooks/n8n'
   id:
     | '__root__'
     | '/_app'
@@ -147,16 +180,20 @@ export interface FileRouteTypes {
     | '/_app/demanda'
     | '/_app/equipe'
     | '/_app/estoque'
+    | '/_app/fechamento'
     | '/_app/fichas'
     | '/_app/fornecedores'
     | '/_app/insumos'
     | '/_app/producao'
+    | '/_app/webhooks'
     | '/_app/'
+    | '/api/webhooks/n8n'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -180,6 +217,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/webhooks': {
+      id: '/_app/webhooks'
+      path: '/webhooks'
+      fullPath: '/webhooks'
+      preLoaderRoute: typeof AppWebhooksRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/producao': {
@@ -210,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFichasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/fechamento': {
+      id: '/_app/fechamento'
+      path: '/fechamento'
+      fullPath: '/fechamento'
+      preLoaderRoute: typeof AppFechamentoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/estoque': {
       id: '/_app/estoque'
       path: '/estoque'
@@ -238,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCardapioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/webhooks/n8n': {
+      id: '/api/webhooks/n8n'
+      path: '/api/webhooks/n8n'
+      fullPath: '/api/webhooks/n8n'
+      preLoaderRoute: typeof ApiWebhooksN8nRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,10 +304,12 @@ interface AppRouteChildren {
   AppDemandaRoute: typeof AppDemandaRoute
   AppEquipeRoute: typeof AppEquipeRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
+  AppFechamentoRoute: typeof AppFechamentoRoute
   AppFichasRoute: typeof AppFichasRoute
   AppFornecedoresRoute: typeof AppFornecedoresRoute
   AppInsumosRoute: typeof AppInsumosRoute
   AppProducaoRoute: typeof AppProducaoRoute
+  AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -258,10 +318,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppDemandaRoute: AppDemandaRoute,
   AppEquipeRoute: AppEquipeRoute,
   AppEstoqueRoute: AppEstoqueRoute,
+  AppFechamentoRoute: AppFechamentoRoute,
   AppFichasRoute: AppFichasRoute,
   AppFornecedoresRoute: AppFornecedoresRoute,
   AppInsumosRoute: AppInsumosRoute,
   AppProducaoRoute: AppProducaoRoute,
+  AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -270,6 +332,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

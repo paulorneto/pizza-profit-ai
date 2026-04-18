@@ -55,6 +55,65 @@ export type Database = {
           },
         ]
       }
+      fechamentos_dia: {
+        Row: {
+          acerto_custo_pct: number | null
+          acerto_pessoas_pct: number | null
+          cmv_real_pct: number | null
+          created_at: string
+          custo_real: number
+          data_operacao: string
+          faturamento_real: number
+          fechado_por: string | null
+          id: string
+          observacoes: string | null
+          ordem_id: string
+          pessoas_reais: number
+          sobras_total_kg: number | null
+          ticket_real: number | null
+        }
+        Insert: {
+          acerto_custo_pct?: number | null
+          acerto_pessoas_pct?: number | null
+          cmv_real_pct?: number | null
+          created_at?: string
+          custo_real?: number
+          data_operacao: string
+          faturamento_real: number
+          fechado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem_id: string
+          pessoas_reais: number
+          sobras_total_kg?: number | null
+          ticket_real?: number | null
+        }
+        Update: {
+          acerto_custo_pct?: number | null
+          acerto_pessoas_pct?: number | null
+          cmv_real_pct?: number | null
+          created_at?: string
+          custo_real?: number
+          data_operacao?: string
+          faturamento_real?: number
+          fechado_por?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem_id?: string
+          pessoas_reais?: number
+          sobras_total_kg?: number | null
+          ticket_real?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fechamentos_dia_ordem_id_fkey"
+            columns: ["ordem_id"]
+            isOneToOne: true
+            referencedRelation: "ordens_producao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ficha_itens: {
         Row: {
           created_at: string
@@ -511,6 +570,45 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_tokens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          criado_por: string | null
+          expira_em: string | null
+          id: string
+          nome: string
+          token_hash: string
+          token_prefix: string
+          total_chamadas: number
+          ultimo_uso: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          nome: string
+          token_hash: string
+          token_prefix: string
+          total_chamadas?: number
+          ultimo_uso?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          nome?: string
+          token_hash?: string
+          token_prefix?: string
+          total_chamadas?: number
+          ultimo_uso?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_alertas_estoque: {
@@ -528,6 +626,25 @@ export type Database = {
       }
     }
     Functions: {
+      criar_ordem_via_webhook: {
+        Args: {
+          _data: string
+          _origem?: string
+          _pessoas: number
+          _ticket?: number
+        }
+        Returns: string
+      }
+      fechar_ordem_producao: {
+        Args: {
+          _faturamento_real: number
+          _itens_reais: Json
+          _observacoes?: string
+          _ordem_id: string
+          _pessoas_reais: number
+        }
+        Returns: string
+      }
       gerar_ordem_producao: {
         Args: {
           _data: string
@@ -536,6 +653,10 @@ export type Database = {
           _ticket?: number
         }
         Returns: string
+      }
+      gerar_token_webhook: {
+        Args: { _expira_em?: string; _nome: string }
+        Returns: Json
       }
       get_user_roles: {
         Args: { _user_id: string }
@@ -548,6 +669,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validar_token_webhook: { Args: { _token: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "gerente" | "cozinha" | "estoque"
