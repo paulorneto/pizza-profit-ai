@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppWebhooksRouteImport } from './routes/_app.webhooks'
 import { Route as AppProducaoRouteImport } from './routes/_app.producao'
 import { Route as AppInsumosRouteImport } from './routes/_app.insumos'
 import { Route as AppFornecedoresRouteImport } from './routes/_app.fornecedores'
 import { Route as AppFichasRouteImport } from './routes/_app.fichas'
+import { Route as AppFechamentoRouteImport } from './routes/_app.fechamento'
 import { Route as AppEstoqueRouteImport } from './routes/_app.estoque'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
@@ -36,6 +38,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWebhooksRoute = AppWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProducaoRoute = AppProducaoRouteImport.update({
   id: '/producao',
   path: '/producao',
@@ -54,6 +61,11 @@ const AppFornecedoresRoute = AppFornecedoresRouteImport.update({
 const AppFichasRoute = AppFichasRouteImport.update({
   id: '/fichas',
   path: '/fichas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFechamentoRoute = AppFechamentoRouteImport.update({
+  id: '/fechamento',
+  path: '/fechamento',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEstoqueRoute = AppEstoqueRouteImport.update({
@@ -89,10 +101,12 @@ export interface FileRoutesByFullPath {
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
+  '/fechamento': typeof AppFechamentoRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/webhooks': typeof AppWebhooksRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesByTo {
@@ -101,10 +115,12 @@ export interface FileRoutesByTo {
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
+  '/fechamento': typeof AppFechamentoRoute
   '/fichas': typeof AppFichasRoute
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/webhooks': typeof AppWebhooksRoute
   '/': typeof AppIndexRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
@@ -116,10 +132,12 @@ export interface FileRoutesById {
   '/_app/demanda': typeof AppDemandaRoute
   '/_app/equipe': typeof AppEquipeRoute
   '/_app/estoque': typeof AppEstoqueRoute
+  '/_app/fechamento': typeof AppFechamentoRoute
   '/_app/fichas': typeof AppFichasRoute
   '/_app/fornecedores': typeof AppFornecedoresRoute
   '/_app/insumos': typeof AppInsumosRoute
   '/_app/producao': typeof AppProducaoRoute
+  '/_app/webhooks': typeof AppWebhooksRoute
   '/_app/': typeof AppIndexRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
@@ -132,10 +150,12 @@ export interface FileRouteTypes {
     | '/demanda'
     | '/equipe'
     | '/estoque'
+    | '/fechamento'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/webhooks'
     | '/api/webhooks/n8n'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,10 +164,12 @@ export interface FileRouteTypes {
     | '/demanda'
     | '/equipe'
     | '/estoque'
+    | '/fechamento'
     | '/fichas'
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/webhooks'
     | '/'
     | '/api/webhooks/n8n'
   id:
@@ -158,10 +180,12 @@ export interface FileRouteTypes {
     | '/_app/demanda'
     | '/_app/equipe'
     | '/_app/estoque'
+    | '/_app/fechamento'
     | '/_app/fichas'
     | '/_app/fornecedores'
     | '/_app/insumos'
     | '/_app/producao'
+    | '/_app/webhooks'
     | '/_app/'
     | '/api/webhooks/n8n'
   fileRoutesById: FileRoutesById
@@ -195,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/webhooks': {
+      id: '/_app/webhooks'
+      path: '/webhooks'
+      fullPath: '/webhooks'
+      preLoaderRoute: typeof AppWebhooksRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/producao': {
       id: '/_app/producao'
       path: '/producao'
@@ -221,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/fichas'
       fullPath: '/fichas'
       preLoaderRoute: typeof AppFichasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/fechamento': {
+      id: '/_app/fechamento'
+      path: '/fechamento'
+      fullPath: '/fechamento'
+      preLoaderRoute: typeof AppFechamentoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/estoque': {
@@ -266,10 +304,12 @@ interface AppRouteChildren {
   AppDemandaRoute: typeof AppDemandaRoute
   AppEquipeRoute: typeof AppEquipeRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
+  AppFechamentoRoute: typeof AppFechamentoRoute
   AppFichasRoute: typeof AppFichasRoute
   AppFornecedoresRoute: typeof AppFornecedoresRoute
   AppInsumosRoute: typeof AppInsumosRoute
   AppProducaoRoute: typeof AppProducaoRoute
+  AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -278,10 +318,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppDemandaRoute: AppDemandaRoute,
   AppEquipeRoute: AppEquipeRoute,
   AppEstoqueRoute: AppEstoqueRoute,
+  AppFechamentoRoute: AppFechamentoRoute,
   AppFichasRoute: AppFichasRoute,
   AppFornecedoresRoute: AppFornecedoresRoute,
   AppInsumosRoute: AppInsumosRoute,
   AppProducaoRoute: AppProducaoRoute,
+  AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -295,3 +337,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
