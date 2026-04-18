@@ -20,6 +20,7 @@ import { Route as AppEstoqueRouteImport } from './routes/_app.estoque'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
 import { Route as AppCardapioRouteImport } from './routes/_app.cardapio'
+import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -75,6 +76,11 @@ const AppCardapioRoute = AppCardapioRouteImport.update({
   path: '/cardapio',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
+  id: '/api/webhooks/n8n',
+  path: '/api/webhooks/n8n',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
   '/': typeof AppIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_app/insumos': typeof AppInsumosRoute
   '/_app/producao': typeof AppProducaoRoute
   '/_app/': typeof AppIndexRoute
+  '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/api/webhooks/n8n'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/insumos'
     | '/producao'
     | '/'
+    | '/api/webhooks/n8n'
   id:
     | '__root__'
     | '/_app'
@@ -152,11 +163,13 @@ export interface FileRouteTypes {
     | '/_app/insumos'
     | '/_app/producao'
     | '/_app/'
+    | '/api/webhooks/n8n'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiWebhooksN8nRoute: typeof ApiWebhooksN8nRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCardapioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/webhooks/n8n': {
+      id: '/api/webhooks/n8n'
+      path: '/api/webhooks/n8n'
+      fullPath: '/api/webhooks/n8n'
+      preLoaderRoute: typeof ApiWebhooksN8nRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -270,7 +290,17 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiWebhooksN8nRoute: ApiWebhooksN8nRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
