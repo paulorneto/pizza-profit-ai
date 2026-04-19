@@ -17,6 +17,7 @@ import {
   Flame,
   ClipboardCheck,
   Webhook,
+  Bot,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "gerente", "cozinha", "estoque"] },
+  { to: "/consultor", label: "Consultor IA 360", icon: Bot, roles: ["admin", "gerente"] },
   { to: "/producao", label: "Motor de Produção", icon: Flame, roles: ["admin", "gerente", "cozinha"] },
   { to: "/fechamento", label: "Fechamento do Dia", icon: ClipboardCheck, roles: ["admin", "gerente", "cozinha"] },
   { to: "/estoque", label: "Estoque", icon: Boxes, roles: ["admin", "gerente", "estoque"] },
