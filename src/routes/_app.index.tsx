@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
-import { brl, num } from "@/lib/format";
+import { brl } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -37,13 +37,36 @@ function useDashboardData() {
   return useQuery({
     queryKey: ["dashboard-overview"],
     queryFn: async () => {
-      const [insumos, fichas, cardapio] = await Promise.all([
-        supabase.from("insumos").select("id, nome, estoque_atual, ponto_reposicao, custo_medio, unidade"),
-        supabase.from("fichas_tecnicas").select("id, nome, categoria, cmv_por_porcao, ativo"),
-        supabase.from("cardapio").select("id, ativo").eq("ativo", true),
+      const hoje = new Date();
+      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+        .toISOString()
+        .slice(0, 10);
+
+      const [insumos, fichas, cardapioAtivo, parametros, fechamentos] = await Promise.all([
+        supabase
+          .from("insumos")
+          .select("id, nome, estoque_atual, ponto_reposicao, custo_medio, unidade"),
+        supabase.from("fichas_tecnicas").select("id, cmv_por_porcao, preco_venda, ativo"),
+        supabase.from("cardapio").select("id, ficha_id, ativo").eq("ativo", true),
+        supabase
+          .from("parametros_demanda")
+          .select("ficha_id, porcoes_por_pessoa, peso_dia_semana, ativo")
+          .eq("ativo", true),
+        supabase
+          .from("fechamentos_dia")
+          .select(
+            "data_operacao, pessoas_reais, faturamento_real, custo_real, cmv_real_pct",
+          )
+          .gte("data_operacao", inicioMes)
+          .order("data_operacao", { ascending: false }),
       ]);
+
       const insumosData = insumos.data ?? [];
       const fichasData = fichas.data ?? [];
+      const fechData = fechamentos.data ?? [];
+      const paramsData = parametros.data ?? [];
+      const cardapioData = cardapioAtivo.data ?? [];
+
       const valorEstoque = insumosData.reduce(
         (acc, i) => acc + Number(i.estoque_atual) * Number(i.custo_medio),
         0,
@@ -51,24 +74,74 @@ function useDashboardData() {
       const rupturas = insumosData.filter(
         (i) => Number(i.estoque_atual) <= Number(i.ponto_reposicao),
       );
-      const cmvMedio =
-        fichasData.length > 0
-          ? fichasData.reduce((a, f) => a + Number(f.cmv_por_porcao), 0) / fichasData.length
+
+      // ===== Projeção do mês baseada no histórico =====
+      const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+      const diasFechados = fechData.length || 1;
+      const totalPessoasFech = fechData.reduce((a, f) => a + Number(f.pessoas_reais), 0);
+      const mediaPessoasDia = totalPessoasFech / diasFechados || 180;
+      const mediaTicket =
+        totalPessoasFech > 0
+          ? fechData.reduce((a, f) => a + Number(f.faturamento_real), 0) / totalPessoasFech
+          : 89.9;
+
+      const cardapioFichaIds = new Set(cardapioData.map((c) => c.ficha_id));
+      const cmvPrevistoPorPessoa = paramsData
+        .filter((p) => cardapioFichaIds.has(p.ficha_id))
+        .reduce((acc, p) => {
+          const ficha = fichasData.find((f) => f.id === p.ficha_id);
+          if (!ficha) return acc;
+          return (
+            acc +
+            Number(p.porcoes_por_pessoa) *
+              Number(p.peso_dia_semana) *
+              Number(ficha.cmv_por_porcao)
+          );
+        }, 0);
+
+      const faturamentoPrevistoMes = mediaPessoasDia * mediaTicket * diasNoMes;
+      const consumoPrevistoMes = mediaPessoasDia * cmvPrevistoPorPessoa * diasNoMes;
+
+      // ===== Realizados no mês =====
+      const faturamentoRealMes = fechData.reduce(
+        (a, f) => a + Number(f.faturamento_real),
+        0,
+      );
+      const custoRealMes = fechData.reduce((a, f) => a + Number(f.custo_real), 0);
+      const cmvRealMedio =
+        fechData.length > 0
+          ? fechData.reduce((a, f) => a + Number(f.cmv_real_pct ?? 0), 0) / fechData.length
           : 0;
+
+      // ===== Economia do mês =====
+      // Benchmark mercado buffet: CMV ~35%. Tudo abaixo = economia gerada pelo sistema.
+      const CMV_BENCHMARK_PCT = 35;
+      const custoSemSistema = (faturamentoRealMes * CMV_BENCHMARK_PCT) / 100;
+      const economiaMes = Math.max(0, custoSemSistema - custoRealMes);
+
       return {
-        totalInsumos: insumosData.length,
         valorEstoque,
         rupturas,
-        totalFichas: fichasData.length,
-        fichasAtivas: fichasData.filter((f) => f.ativo).length,
-        cmvMedio,
-        cardapioAtivo: cardapio.data?.length ?? 0,
+        faturamentoPrevistoMes,
+        consumoPrevistoMes,
+        faturamentoRealMes,
+        custoRealMes,
+        cmvRealMedio,
+        economiaMes,
+        diasNoMes,
+        diasFechados,
+        mediaPessoasDia,
       };
     },
   });
 }
 
-type Insight = { severidade: "info" | "warn" | "critical"; titulo: string; descricao: string; acao: string };
+type Insight = {
+  severidade: "info" | "warn" | "critical";
+  titulo: string;
+  descricao: string;
+  acao: string;
+};
 
 function useInsights(enabled: boolean) {
   return useQuery({
@@ -89,37 +162,50 @@ function useInsights(enabled: boolean) {
 function DashboardPage() {
   const { user, roles } = useAuth();
   const { data, isLoading } = useDashboardData();
-  const isAdminOrGerente = roles.includes("admin") || roles.includes("gerente");
+  const isAdmin = roles.includes("admin");
+  const isAdminOrGerente = isAdmin || roles.includes("gerente");
 
   return (
     <div>
       <PageHeader
         eyebrow="Painel principal"
         title={`Olá${user?.email ? `, ${user.email.split("@")[0]}` : ""} 👋`}
-        description="Visão geral da operação. Conforme você cadastrar fichas, insumos e cardápio, este painel ganha vida com KPIs em tempo real."
+        description="Visão geral do mês — projeções, realizado e economia gerada pelo sistema."
       />
 
       {/* KPIs principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          icon={Package}
-          label="Insumos cadastrados"
-          value={isLoading ? "—" : String(data?.totalInsumos ?? 0)}
-          hint={isLoading ? "" : `${brl(data?.valorEstoque ?? 0)} em estoque`}
+          icon={DollarSign}
+          label="Faturamento previsto (mês)"
+          value={isLoading ? "—" : brl(data?.faturamentoPrevistoMes ?? 0)}
+          hint={
+            isLoading
+              ? ""
+              : `Realizado: ${brl(data?.faturamentoRealMes ?? 0)} em ${data?.diasFechados ?? 0} dias`
+          }
           accent="primary"
         />
         <KpiCard
-          icon={ChefHat}
-          label="Fichas técnicas"
-          value={isLoading ? "—" : String(data?.totalFichas ?? 0)}
-          hint={isLoading ? "" : `${data?.fichasAtivas ?? 0} ativas`}
+          icon={ShoppingCart}
+          label="Consumo previsto (mês)"
+          value={isLoading ? "—" : brl(data?.consumoPrevistoMes ?? 0)}
+          hint={
+            isLoading
+              ? ""
+              : `CMV real médio: ${(data?.cmvRealMedio ?? 0).toFixed(1)}%`
+          }
           accent="accent"
         />
         <KpiCard
-          icon={TrendingUp}
-          label="CMV médio por porção"
-          value={isLoading ? "—" : brl(data?.cmvMedio ?? 0)}
-          hint="Calculado das fichas"
+          icon={PiggyBank}
+          label="Economia gerada (mês)"
+          value={isLoading ? "—" : brl(data?.economiaMes ?? 0)}
+          hint={
+            isLoading
+              ? ""
+              : "vs. CMV mercado de 35%"
+          }
           accent="success"
         />
         <KpiCard
@@ -131,16 +217,16 @@ function DashboardPage() {
               ? ""
               : data && data.rupturas.length > 0
                 ? "Itens abaixo do ponto"
-                : "Tudo certo"
+                : `${brl(data?.valorEstoque ?? 0)} em estoque`
           }
           accent={data && data.rupturas.length > 0 ? "destructive" : "muted"}
         />
       </div>
 
-      {/* Insights IA proativos */}
+      {/* Insights IA */}
       {isAdminOrGerente && <InsightsSection />}
 
-      {/* Próximos passos */}
+      {/* Próximos passos + admin */}
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <Card className="p-6 bg-gradient-surface border-border/60">
           <div className="flex items-start gap-4">
@@ -171,16 +257,15 @@ function DashboardPage() {
               <Pizza className="h-6 w-6 text-accent" />
             </div>
             <div className="flex-1">
-              <h3 className="font-display text-xl text-foreground">Comece agora</h3>
+              <h3 className="font-display text-xl text-foreground">Atalhos rápidos</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Para o motor de IA funcionar, ele precisa de fichas técnicas e custos de insumos
-                como base.
+                Vá direto para as áreas mais usadas no dia a dia.
               </p>
               <div className="mt-4 grid gap-2">
-                <ActionLink to="/insumos" label="1. Cadastre insumos" />
-                <ActionLink to="/fichas" label="2. Monte fichas técnicas" />
-                <ActionLink to="/cardapio" label="3. Defina cardápio do buffet" />
-                <ActionLink to="/consultor" label="4. Converse com o Consultor IA" />
+                <ActionLink to="/demanda" label="Gerar ordem de produção" />
+                <ActionLink to="/fechamento" label="Fechar o dia" />
+                <ActionLink to="/estoque" label="Movimentar estoque" />
+                <ActionLink to="/consultor" label="Falar com Consultor IA" />
               </div>
             </div>
           </div>
@@ -205,7 +290,8 @@ function DashboardPage() {
               >
                 <span className="font-medium text-foreground">{r.nome}</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {num(Number(r.estoque_atual))} {r.unidade} (mín {num(Number(r.ponto_reposicao))})
+                  {Number(r.estoque_atual).toFixed(2)} {r.unidade} (mín{" "}
+                  {Number(r.ponto_reposicao).toFixed(2)})
                 </span>
               </div>
             ))}
@@ -213,11 +299,139 @@ function DashboardPage() {
         </Card>
       )}
 
+      {/* Limpar dados de demonstração — só admin */}
+      {isAdmin && <DemoDataPanel />}
+
       <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
         <Users className="h-3 w-3" />
         Seu perfil: {roles.join(", ") || "carregando..."}
       </div>
     </div>
+  );
+}
+
+function DemoDataPanel() {
+  const qc = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+
+  const { data: counts } = useQuery({
+    queryKey: ["mock-data-counts"],
+    queryFn: async () => {
+      const [insumos, fornecedores, fichas, cardapio, ordens, mov] = await Promise.all([
+        supabase.from("insumos").select("id", { count: "exact", head: true }).like("observacoes", "%[MOCK]%"),
+        supabase.from("fornecedores").select("id", { count: "exact", head: true }).like("observacoes", "%[MOCK]%"),
+        supabase.from("fichas_tecnicas").select("id", { count: "exact", head: true }).like("observacoes", "%[MOCK]%"),
+        supabase.from("cardapio").select("id", { count: "exact", head: true }).like("observacoes", "%[MOCK]%"),
+        supabase.from("ordens_producao").select("id", { count: "exact", head: true }).like("observacoes", "%[DEMO]%"),
+        supabase.from("movimentos_estoque").select("id", { count: "exact", head: true }).like("observacoes", "%[DEMO]%"),
+      ]);
+      return {
+        insumos: insumos.count ?? 0,
+        fornecedores: fornecedores.count ?? 0,
+        fichas: fichas.count ?? 0,
+        cardapio: cardapio.count ?? 0,
+        ordens: ordens.count ?? 0,
+        movimentos: mov.count ?? 0,
+      };
+    },
+  });
+
+  const total =
+    (counts?.insumos ?? 0) +
+    (counts?.fornecedores ?? 0) +
+    (counts?.fichas ?? 0) +
+    (counts?.cardapio ?? 0) +
+    (counts?.ordens ?? 0) +
+    (counts?.movimentos ?? 0);
+
+  const limpar = useMutation({
+    mutationFn: async () => {
+      // Ordem de delete respeita FKs
+      // 1. Movimentos demo
+      await supabase.from("movimentos_estoque").delete().like("observacoes", "%[DEMO]%");
+      // 2. Fechamentos das ordens demo
+      const { data: ordensDemo } = await supabase
+        .from("ordens_producao")
+        .select("id")
+        .like("observacoes", "%[DEMO]%");
+      const ordemIds = (ordensDemo ?? []).map((o) => o.id);
+      if (ordemIds.length > 0) {
+        await supabase.from("fechamentos_dia").delete().in("ordem_id", ordemIds);
+        await supabase.from("ordem_itens").delete().in("ordem_id", ordemIds);
+        await supabase.from("ordens_producao").delete().in("id", ordemIds);
+      }
+      // 3. Cardápio mock
+      await supabase.from("cardapio").delete().like("observacoes", "%[MOCK]%");
+      // 4. Parâmetros + ficha_itens das fichas mock
+      const { data: fichasMock } = await supabase
+        .from("fichas_tecnicas")
+        .select("id")
+        .like("observacoes", "%[MOCK]%");
+      const fichaIds = (fichasMock ?? []).map((f) => f.id);
+      if (fichaIds.length > 0) {
+        await supabase.from("parametros_demanda").delete().in("ficha_id", fichaIds);
+        await supabase.from("ficha_itens").delete().in("ficha_id", fichaIds);
+        await supabase.from("fichas_tecnicas").delete().in("id", fichaIds);
+      }
+      // 5. Insumos mock (movimentos não-demo já podem ter sido criados; ignora se falhar)
+      await supabase.from("insumos").delete().like("observacoes", "%[MOCK]%");
+      // 6. Fornecedores mock
+      await supabase.from("fornecedores").delete().like("observacoes", "%[MOCK]%");
+    },
+    onSuccess: () => {
+      toast.success("Dados de demonstração removidos");
+      qc.invalidateQueries();
+      setConfirming(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (total === 0) return null;
+
+  return (
+    <Card className="mt-8 border-amber-500/30 bg-amber-500/5 p-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+            <Trash2 className="h-4 w-4" />
+          </div>
+          <div>
+            <h4 className="font-display text-base text-foreground">Dados de demonstração ativos</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {counts?.fornecedores} fornecedores · {counts?.insumos} insumos · {counts?.fichas} fichas ·{" "}
+              {counts?.cardapio} no cardápio · {counts?.ordens} ordens históricas
+            </p>
+          </div>
+        </div>
+        {confirming ? (
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => limpar.mutate()}
+              disabled={limpar.isPending}
+              className="gap-2"
+            >
+              {limpar.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Confirmar exclusão
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setConfirming(true)}
+            className="gap-2"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Apagar dados de demonstração
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -249,7 +463,11 @@ function InsightsSection() {
           disabled={isFetching}
           className="gap-2"
         >
-          {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+          {isFetching ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
           {enabled ? "Atualizar" : "Gerar insights"}
         </Button>
       </div>
@@ -267,9 +485,7 @@ function InsightsSection() {
         </div>
       )}
 
-      {error && (
-        <div className="mt-4 text-sm text-destructive">{(error as Error).message}</div>
-      )}
+      {error && <div className="mt-4 text-sm text-destructive">{(error as Error).message}</div>}
 
       {data && data.length > 0 && (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -299,8 +515,16 @@ function InsightsSection() {
 function InsightCard({ insight }: { insight: Insight }) {
   const map = {
     info: { Icon: Info, color: "border-primary/30 bg-primary/5", text: "text-primary" },
-    warn: { Icon: AlertTriangle, color: "border-amber-500/30 bg-amber-500/5", text: "text-amber-400" },
-    critical: { Icon: AlertOctagon, color: "border-destructive/40 bg-destructive/5", text: "text-destructive" },
+    warn: {
+      Icon: AlertTriangle,
+      color: "border-amber-500/30 bg-amber-500/5",
+      text: "text-amber-400",
+    },
+    critical: {
+      Icon: AlertOctagon,
+      color: "border-destructive/40 bg-destructive/5",
+      text: "text-destructive",
+    },
   } as const;
   const cfg = map[insight.severidade] ?? map.info;
   const Icon = cfg.Icon;
@@ -312,7 +536,9 @@ function InsightCard({ insight }: { insight: Insight }) {
           <div className="font-medium text-foreground text-sm">{insight.titulo}</div>
           <div className="mt-1 text-xs text-muted-foreground">{insight.descricao}</div>
           <div className="mt-2 text-xs">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ação: </span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Ação:{" "}
+            </span>
             <span className="text-foreground">{insight.acao}</span>
           </div>
         </div>
@@ -349,7 +575,9 @@ function KpiCard({
           <div className="mt-2 font-display text-3xl text-foreground tabular-nums">{value}</div>
           {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accentMap[accent]}`}>
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-lg ${accentMap[accent]}`}
+        >
           <Icon className="h-5 w-5" />
         </div>
       </div>
