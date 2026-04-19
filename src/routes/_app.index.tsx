@@ -119,7 +119,7 @@ function DashboardPage() {
             <div className="flex-1">
               <h3 className="font-display text-xl text-foreground">Roadmap LLum</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Você está na <strong className="text-foreground">Fase 2 — Estoque + Motor</strong>.
+                Você está na <strong className="text-foreground">Fase 3 — Webhook + Fechamento</strong> concluída. Próxima: Consultor IA.
               </p>
               <ul className="mt-4 space-y-2 text-sm">
                 <RoadmapItem done label="Auth multi-perfil + RLS" />
@@ -127,7 +127,7 @@ function DashboardPage() {
                 <RoadmapItem done label="CMV calculado automaticamente" />
                 <RoadmapItem done label="Estoque inteligente + custo médio ponderado" />
                 <RoadmapItem done label="Motor de demanda → ordem de produção" />
-                <RoadmapItem label="Webhook n8n + fechamento do dia (Fase 3)" />
+                <RoadmapItem done label="Webhook n8n autenticado + fechamento do dia" />
                 <RoadmapItem label="Consultor IA + simulações (Fase 4)" />
               </ul>
             </div>
