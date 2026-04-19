@@ -21,6 +21,7 @@ import { Route as AppFechamentoRouteImport } from './routes/_app.fechamento'
 import { Route as AppEstoqueRouteImport } from './routes/_app.estoque'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
+import { Route as AppConsultorRouteImport } from './routes/_app.consultor'
 import { Route as AppCardapioRouteImport } from './routes/_app.cardapio'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 
@@ -83,6 +84,11 @@ const AppDemandaRoute = AppDemandaRouteImport.update({
   path: '/demanda',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConsultorRoute = AppConsultorRouteImport.update({
+  id: '/consultor',
+  path: '/consultor',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCardapioRoute = AppCardapioRouteImport.update({
   id: '/cardapio',
   path: '/cardapio',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
   '/cardapio': typeof AppCardapioRoute
+  '/consultor': typeof AppConsultorRoute
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cardapio': typeof AppCardapioRoute
+  '/consultor': typeof AppConsultorRoute
   '/demanda': typeof AppDemandaRoute
   '/equipe': typeof AppEquipeRoute
   '/estoque': typeof AppEstoqueRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/cardapio': typeof AppCardapioRoute
+  '/_app/consultor': typeof AppConsultorRoute
   '/_app/demanda': typeof AppDemandaRoute
   '/_app/equipe': typeof AppEquipeRoute
   '/_app/estoque': typeof AppEstoqueRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cardapio'
+    | '/consultor'
     | '/demanda'
     | '/equipe'
     | '/estoque'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/cardapio'
+    | '/consultor'
     | '/demanda'
     | '/equipe'
     | '/estoque'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/_app/cardapio'
+    | '/_app/consultor'
     | '/_app/demanda'
     | '/_app/equipe'
     | '/_app/estoque'
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDemandaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/consultor': {
+      id: '/_app/consultor'
+      path: '/consultor'
+      fullPath: '/consultor'
+      preLoaderRoute: typeof AppConsultorRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/cardapio': {
       id: '/_app/cardapio'
       path: '/cardapio'
@@ -301,6 +320,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCardapioRoute: typeof AppCardapioRoute
+  AppConsultorRoute: typeof AppConsultorRoute
   AppDemandaRoute: typeof AppDemandaRoute
   AppEquipeRoute: typeof AppEquipeRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
@@ -315,6 +335,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppCardapioRoute: AppCardapioRoute,
+  AppConsultorRoute: AppConsultorRoute,
   AppDemandaRoute: AppDemandaRoute,
   AppEquipeRoute: AppEquipeRoute,
   AppEstoqueRoute: AppEstoqueRoute,
@@ -337,3 +358,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

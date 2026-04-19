@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Pizza,
@@ -9,13 +10,19 @@ import {
   Sparkles,
   Users,
   ArrowRight,
+  Bot,
+  Loader2,
+  Info,
+  AlertOctagon,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { brl, num } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({
@@ -59,9 +66,28 @@ function useDashboardData() {
   });
 }
 
+type Insight = { severidade: "info" | "warn" | "critical"; titulo: string; descricao: string; acao: string };
+
+function useInsights(enabled: boolean) {
+  return useQuery({
+    queryKey: ["dashboard-insights"],
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("consultor-insights", {
+        body: {},
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return ((data as any)?.insights ?? []) as Insight[];
+    },
+  });
+}
+
 function DashboardPage() {
   const { user, roles } = useAuth();
   const { data, isLoading } = useDashboardData();
+  const isAdminOrGerente = roles.includes("admin") || roles.includes("gerente");
 
   return (
     <div>
@@ -109,6 +135,9 @@ function DashboardPage() {
         />
       </div>
 
+      {/* Insights IA proativos */}
+      {isAdminOrGerente && <InsightsSection />}
+
       {/* Próximos passos */}
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <Card className="p-6 bg-gradient-surface border-border/60">
@@ -119,7 +148,7 @@ function DashboardPage() {
             <div className="flex-1">
               <h3 className="font-display text-xl text-foreground">Roadmap LLum</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Você está na <strong className="text-foreground">Fase 3 — Webhook + Fechamento</strong> concluída. Próxima: Consultor IA.
+                Sistema 360 <strong className="text-foreground">completo</strong> — todas as 4 fases ativas.
               </p>
               <ul className="mt-4 space-y-2 text-sm">
                 <RoadmapItem done label="Auth multi-perfil + RLS" />
@@ -128,7 +157,7 @@ function DashboardPage() {
                 <RoadmapItem done label="Estoque inteligente + custo médio ponderado" />
                 <RoadmapItem done label="Motor de demanda → ordem de produção" />
                 <RoadmapItem done label="Webhook n8n autenticado + fechamento do dia" />
-                <RoadmapItem label="Consultor IA + simulações (Fase 4)" />
+                <RoadmapItem done label="Consultor IA 360 + simulações de cenário" />
               </ul>
             </div>
           </div>
@@ -149,6 +178,7 @@ function DashboardPage() {
                 <ActionLink to="/insumos" label="1. Cadastre insumos" />
                 <ActionLink to="/fichas" label="2. Monte fichas técnicas" />
                 <ActionLink to="/cardapio" label="3. Defina cardápio do buffet" />
+                <ActionLink to="/consultor" label="4. Converse com o Consultor IA" />
               </div>
             </div>
           </div>
@@ -184,6 +214,106 @@ function DashboardPage() {
       <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
         <Users className="h-3 w-3" />
         Seu perfil: {roles.join(", ") || "carregando..."}
+      </div>
+    </div>
+  );
+}
+
+function InsightsSection() {
+  const [enabled, setEnabled] = useState(false);
+  const { data, isLoading, error, refetch, isFetching } = useInsights(enabled);
+
+  return (
+    <Card className="mt-8 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-ember shadow-elegant">
+            <Bot className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-display text-lg text-foreground">Insights do Consultor IA</h3>
+            <p className="text-xs text-muted-foreground">
+              Análise proativa cruzando estoque, fechamentos e ordens recentes.
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            if (!enabled) setEnabled(true);
+            else refetch();
+          }}
+          disabled={isFetching}
+          className="gap-2"
+        >
+          {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+          {enabled ? "Atualizar" : "Gerar insights"}
+        </Button>
+      </div>
+
+      {!enabled && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Clique em <strong className="text-foreground">Gerar insights</strong> para o consultor
+          analisar sua operação agora.
+        </p>
+      )}
+
+      {enabled && isLoading && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" /> Analisando...
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4 text-sm text-destructive">{(error as Error).message}</div>
+      )}
+
+      {data && data.length > 0 && (
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {data.map((i, idx) => (
+            <InsightCard key={idx} insight={i} />
+          ))}
+        </div>
+      )}
+      {data && data.length === 0 && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Tudo tranquilo — sem alertas no momento.
+        </p>
+      )}
+
+      <div className="mt-4 flex justify-end">
+        <Link
+          to="/consultor"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          Abrir chat completo <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+function InsightCard({ insight }: { insight: Insight }) {
+  const map = {
+    info: { Icon: Info, color: "border-primary/30 bg-primary/5", text: "text-primary" },
+    warn: { Icon: AlertTriangle, color: "border-amber-500/30 bg-amber-500/5", text: "text-amber-400" },
+    critical: { Icon: AlertOctagon, color: "border-destructive/40 bg-destructive/5", text: "text-destructive" },
+  } as const;
+  const cfg = map[insight.severidade] ?? map.info;
+  const Icon = cfg.Icon;
+  return (
+    <div className={cn("rounded-lg border p-4", cfg.color)}>
+      <div className="flex items-start gap-2">
+        <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", cfg.text)} />
+        <div className="flex-1">
+          <div className="font-medium text-foreground text-sm">{insight.titulo}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{insight.descricao}</div>
+          <div className="mt-2 text-xs">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ação: </span>
+            <span className="text-foreground">{insight.acao}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
