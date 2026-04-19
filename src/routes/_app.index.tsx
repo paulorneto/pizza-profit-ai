@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Pizza,
@@ -219,7 +220,7 @@ function DashboardPage() {
 }
 
 function InsightsSection() {
-  const [enabled, setEnabled] = useStateBool(false);
+  const [enabled, setEnabled] = useState(false);
   const { data, isLoading, error, refetch, isFetching } = useInsights(enabled);
 
   return (
@@ -316,12 +317,6 @@ function InsightCard({ insight }: { insight: Insight }) {
       </div>
     </div>
   );
-}
-
-// Helper local para enabled state simples
-function useStateBool(init: boolean) {
-  const [v, setV] = (require("react") as typeof import("react")).useState(init);
-  return [v, setV] as const;
 }
 
 function KpiCard({
