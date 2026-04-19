@@ -1,7 +1,7 @@
 project_id = "ljruikymlvozyrlresbm"
 
 [functions.consultor-ia]
-verify_jwt = true
+verify_jwt = false
 
 [functions.consultor-insights]
-verify_jwt = true
+verify_jwt = false
