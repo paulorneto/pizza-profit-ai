@@ -7,7 +7,6 @@ import {
   UtensilsCrossed,
   Users,
   LogOut,
-  Pizza,
   Sparkles,
   Truck,
   Menu,
@@ -18,11 +17,14 @@ import {
   ClipboardCheck,
   Webhook,
   Bot,
+  ScanLine,
+  ClipboardList,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import logoLlum from "@/assets/logo-llum.png";
 
 interface NavItem {
   to: string;
@@ -35,6 +37,8 @@ const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "gerente", "cozinha", "estoque"] },
   { to: "/consultor", label: "Consultor IA 360", icon: Bot, roles: ["admin", "gerente"] },
   { to: "/producao", label: "Motor de Produção", icon: Flame, roles: ["admin", "gerente", "cozinha"] },
+  { to: "/separacao", label: "Separação do dia", icon: ClipboardList, roles: ["admin", "gerente", "cozinha"] },
+  { to: "/baixa", label: "Baixa rápida (tablet)", icon: ScanLine, roles: ["admin", "gerente", "cozinha", "estoque"] },
   { to: "/fechamento", label: "Fechamento do Dia", icon: ClipboardCheck, roles: ["admin", "gerente", "cozinha"] },
   { to: "/estoque", label: "Estoque", icon: Boxes, roles: ["admin", "gerente", "estoque"] },
   { to: "/insumos", label: "Insumos", icon: Package, roles: ["admin", "gerente", "estoque"] },
@@ -66,20 +70,18 @@ export function AppShell() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 transform bg-sidebar border-r border-sidebar-border transition-transform duration-200 md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-60 transform bg-sidebar border-r border-sidebar-border transition-transform duration-200 md:relative md:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between gap-3 px-6 py-6 border-b border-sidebar-border">
-            <Link to="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-ember shadow-elegant">
-                <Pizza className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <div className="font-display text-xl leading-tight text-sidebar-foreground">LLum</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Pizzaria · 360
+          <div className="flex items-center justify-between gap-3 px-5 py-5 border-b border-sidebar-border">
+            <Link to="/" className="flex items-center gap-2.5 min-w-0" onClick={() => setMobileOpen(false)}>
+              <img src={logoLlum} alt="LLUM" className="h-9 w-auto shrink-0" />
+              <div className="min-w-0">
+                <div className="font-display text-[15px] leading-tight text-sidebar-foreground tracking-tight">LLUM OS</div>
+                <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Sistema operacional
                 </div>
               </div>
             </Link>
@@ -93,7 +95,7 @@ export function AppShell() {
             </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-0.5">
             {visibleNav.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? currentPath === "/" : currentPath.startsWith(to);
               return (
@@ -102,38 +104,41 @@ export function AppShell() {
                   to={to}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                    "relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-card"
-                      : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", active && "text-primary")} />
-                  {label}
+                  {active && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-primary" />
+                  )}
+                  <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                  <span className="truncate">{label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="border-t border-sidebar-border p-4">
-            <div className="rounded-lg bg-sidebar-accent/40 p-3 mb-3">
-              <div className="text-xs text-muted-foreground">Conectado como</div>
-              <div className="truncate text-sm font-medium text-sidebar-foreground">
+          <div className="border-t border-sidebar-border p-3">
+            <div className="rounded-md bg-sidebar-accent/40 px-3 py-2.5 mb-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Conectado</div>
+              <div className="truncate text-[13px] font-medium text-sidebar-foreground mt-0.5">
                 {user?.email}
               </div>
-              <div className="mt-1 flex flex-wrap gap-1">
+              <div className="mt-1.5 flex flex-wrap gap-1">
                 {roles.map((r) => (
                   <span
                     key={r}
-                    className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary"
+                    className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary"
                   >
                     {r}
                   </span>
                 ))}
               </div>
             </div>
-            <Button onClick={handleLogout} variant="ghost" className="w-full justify-start gap-2">
-              <LogOut className="h-4 w-4" />
+            <Button onClick={handleLogout} variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground">
+              <LogOut className="h-3.5 w-3.5" />
               Sair
             </Button>
           </div>
@@ -152,7 +157,7 @@ export function AppShell() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-4 py-2.5 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -162,20 +167,22 @@ export function AppShell() {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Sistema 360 com motor de IA
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="uppercase tracking-wider font-medium">LLUM OS</span>
+              <span className="text-muted-foreground/60">·</span>
+              <span>Sistema de decisão</span>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground tabular-nums">
+          <div className="text-[11px] text-muted-foreground tabular-nums uppercase tracking-wider">
             {new Date().toLocaleDateString("pt-BR", {
-              weekday: "long",
+              weekday: "short",
               day: "2-digit",
-              month: "long",
+              month: "short",
             })}
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-10">
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </main>
       </div>
