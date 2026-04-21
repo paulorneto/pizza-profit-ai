@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppWebhooksRouteImport } from './routes/_app.webhooks'
+import { Route as AppSeparacaoRouteImport } from './routes/_app.separacao'
 import { Route as AppProducaoRouteImport } from './routes/_app.producao'
 import { Route as AppInsumosRouteImport } from './routes/_app.insumos'
 import { Route as AppFornecedoresRouteImport } from './routes/_app.fornecedores'
@@ -23,6 +24,7 @@ import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppDemandaRouteImport } from './routes/_app.demanda'
 import { Route as AppConsultorRouteImport } from './routes/_app.consultor'
 import { Route as AppCardapioRouteImport } from './routes/_app.cardapio'
+import { Route as AppBaixaRouteImport } from './routes/_app.baixa'
 import { Route as ApiWebhooksN8nRouteImport } from './routes/api.webhooks.n8n'
 
 const AuthRoute = AuthRouteImport.update({
@@ -42,6 +44,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppWebhooksRoute = AppWebhooksRouteImport.update({
   id: '/webhooks',
   path: '/webhooks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSeparacaoRoute = AppSeparacaoRouteImport.update({
+  id: '/separacao',
+  path: '/separacao',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProducaoRoute = AppProducaoRouteImport.update({
@@ -94,6 +101,11 @@ const AppCardapioRoute = AppCardapioRouteImport.update({
   path: '/cardapio',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBaixaRoute = AppBaixaRouteImport.update({
+  id: '/baixa',
+  path: '/baixa',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
   id: '/api/webhooks/n8n',
   path: '/api/webhooks/n8n',
@@ -103,6 +115,7 @@ const ApiWebhooksN8nRoute = ApiWebhooksN8nRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
+  '/baixa': typeof AppBaixaRoute
   '/cardapio': typeof AppCardapioRoute
   '/consultor': typeof AppConsultorRoute
   '/demanda': typeof AppDemandaRoute
@@ -113,11 +126,13 @@ export interface FileRoutesByFullPath {
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/separacao': typeof AppSeparacaoRoute
   '/webhooks': typeof AppWebhooksRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/baixa': typeof AppBaixaRoute
   '/cardapio': typeof AppCardapioRoute
   '/consultor': typeof AppConsultorRoute
   '/demanda': typeof AppDemandaRoute
@@ -128,6 +143,7 @@ export interface FileRoutesByTo {
   '/fornecedores': typeof AppFornecedoresRoute
   '/insumos': typeof AppInsumosRoute
   '/producao': typeof AppProducaoRoute
+  '/separacao': typeof AppSeparacaoRoute
   '/webhooks': typeof AppWebhooksRoute
   '/': typeof AppIndexRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
@@ -136,6 +152,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_app/baixa': typeof AppBaixaRoute
   '/_app/cardapio': typeof AppCardapioRoute
   '/_app/consultor': typeof AppConsultorRoute
   '/_app/demanda': typeof AppDemandaRoute
@@ -146,6 +163,7 @@ export interface FileRoutesById {
   '/_app/fornecedores': typeof AppFornecedoresRoute
   '/_app/insumos': typeof AppInsumosRoute
   '/_app/producao': typeof AppProducaoRoute
+  '/_app/separacao': typeof AppSeparacaoRoute
   '/_app/webhooks': typeof AppWebhooksRoute
   '/_app/': typeof AppIndexRoute
   '/api/webhooks/n8n': typeof ApiWebhooksN8nRoute
@@ -155,6 +173,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/baixa'
     | '/cardapio'
     | '/consultor'
     | '/demanda'
@@ -165,11 +184,13 @@ export interface FileRouteTypes {
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/separacao'
     | '/webhooks'
     | '/api/webhooks/n8n'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/baixa'
     | '/cardapio'
     | '/consultor'
     | '/demanda'
@@ -180,6 +201,7 @@ export interface FileRouteTypes {
     | '/fornecedores'
     | '/insumos'
     | '/producao'
+    | '/separacao'
     | '/webhooks'
     | '/'
     | '/api/webhooks/n8n'
@@ -187,6 +209,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/auth'
+    | '/_app/baixa'
     | '/_app/cardapio'
     | '/_app/consultor'
     | '/_app/demanda'
@@ -197,6 +220,7 @@ export interface FileRouteTypes {
     | '/_app/fornecedores'
     | '/_app/insumos'
     | '/_app/producao'
+    | '/_app/separacao'
     | '/_app/webhooks'
     | '/_app/'
     | '/api/webhooks/n8n'
@@ -236,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/webhooks'
       fullPath: '/webhooks'
       preLoaderRoute: typeof AppWebhooksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/separacao': {
+      id: '/_app/separacao'
+      path: '/separacao'
+      fullPath: '/separacao'
+      preLoaderRoute: typeof AppSeparacaoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/producao': {
@@ -308,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCardapioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/baixa': {
+      id: '/_app/baixa'
+      path: '/baixa'
+      fullPath: '/baixa'
+      preLoaderRoute: typeof AppBaixaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/webhooks/n8n': {
       id: '/api/webhooks/n8n'
       path: '/api/webhooks/n8n'
@@ -319,6 +357,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBaixaRoute: typeof AppBaixaRoute
   AppCardapioRoute: typeof AppCardapioRoute
   AppConsultorRoute: typeof AppConsultorRoute
   AppDemandaRoute: typeof AppDemandaRoute
@@ -329,11 +368,13 @@ interface AppRouteChildren {
   AppFornecedoresRoute: typeof AppFornecedoresRoute
   AppInsumosRoute: typeof AppInsumosRoute
   AppProducaoRoute: typeof AppProducaoRoute
+  AppSeparacaoRoute: typeof AppSeparacaoRoute
   AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBaixaRoute: AppBaixaRoute,
   AppCardapioRoute: AppCardapioRoute,
   AppConsultorRoute: AppConsultorRoute,
   AppDemandaRoute: AppDemandaRoute,
@@ -344,6 +385,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFornecedoresRoute: AppFornecedoresRoute,
   AppInsumosRoute: AppInsumosRoute,
   AppProducaoRoute: AppProducaoRoute,
+  AppSeparacaoRoute: AppSeparacaoRoute,
   AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
 }

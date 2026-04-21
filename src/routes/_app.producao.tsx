@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -6,9 +6,11 @@ import {
   Calendar,
   Users,
   TrendingUp,
-  ChefHat,
-  Plus,
   ListChecks,
+  Package2,
+  ClipboardList,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -26,6 +28,7 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { brl, num } from "@/lib/format";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/producao")({
   head: () => ({ meta: [{ title: "Motor de Produção — LLum" }] }),
@@ -36,6 +39,7 @@ function ProducaoPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showInsumos, setShowInsumos] = useState(true);
 
   const { data: ordens = [] } = useQuery({
     queryKey: ["ordens"],
