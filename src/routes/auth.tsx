@@ -1,12 +1,13 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import * as React from "react";
-import { Pizza, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import logoLlum from "@/assets/logo-llum.png";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -67,13 +68,11 @@ function AuthPage() {
         <div className="absolute inset-0 bg-gradient-glow opacity-60" />
         <div className="relative z-10 flex flex-col justify-between p-12">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-ember shadow-elegant">
-              <Pizza className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src={logoLlum} alt="LLUM Pizzaria" className="h-14 w-auto" />
             <div>
-              <div className="font-display text-2xl text-foreground">LLum</div>
+              <div className="font-display text-xl text-foreground tracking-tight">LLUM OS</div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                Pizzaria · Curitiba
+                Sistema operacional
               </div>
             </div>
           </div>
@@ -81,9 +80,9 @@ function AuthPage() {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
               <Sparkles className="h-3 w-3" />
-              Motor de IA · Otimização de recursos
+              Motor de IA · Decisão em tempo real
             </div>
-            <h1 className="font-display text-5xl leading-tight text-foreground">
+            <h1 className="font-display text-5xl leading-[1.05] text-foreground tracking-tight">
               O cérebro <span className="text-gradient-ember">operacional</span>
               <br /> da sua pizzaria.
             </h1>
@@ -105,13 +104,11 @@ function AuthPage() {
       <div className="flex w-full md:w-1/2 items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md">
           <div className="md:hidden mb-8 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-ember shadow-elegant">
-              <Pizza className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src={logoLlum} alt="LLUM" className="h-11 w-auto" />
             <div>
-              <div className="font-display text-xl text-foreground">LLum Pizzaria</div>
+              <div className="font-display text-lg text-foreground tracking-tight">LLUM OS</div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Sistema 360
+                Sistema operacional
               </div>
             </div>
           </div>
