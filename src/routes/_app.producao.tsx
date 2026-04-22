@@ -283,6 +283,87 @@ function ProducaoPage() {
                   ))}
                 </div>
               </Card>
+
+              {/* Insumos previstos consolidados */}
+              <Card className="mt-6 border-border/60 bg-gradient-surface">
+                <button
+                  type="button"
+                  onClick={() => setShowInsumos((v) => !v)}
+                  className="flex w-full items-center justify-between border-b border-border/60 px-6 py-4 text-left hover:bg-muted/20"
+                >
+                  <div className="flex items-center gap-2">
+                    <Package2 className="h-4 w-4 text-accent" />
+                    <h3 className="font-display text-lg text-foreground">
+                      Insumos previstos para separação — {insumosPrevistos.length} itens
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {insumosPrevistos.some((i) => i.falta) && (
+                      <span className="rounded-md bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-destructive">
+                        {insumosPrevistos.filter((i) => i.falta).length} em falta
+                      </span>
+                    )}
+                    <Link
+                      to="/separacao"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <ClipboardList className="h-3 w-3" /> Abrir separação
+                    </Link>
+                    {showInsumos ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </button>
+                {showInsumos && (
+                  <div className="divide-y divide-border/50">
+                    {insumosPrevistos.length === 0 && (
+                      <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+                        Nenhum insumo cadastrado nas fichas desta ordem.
+                      </div>
+                    )}
+                    {insumosPrevistos.map((ins) => (
+                      <div
+                        key={ins.insumo_id}
+                        className="grid grid-cols-1 gap-2 px-6 py-3 md:grid-cols-[1fr_140px_140px_120px] md:items-center"
+                      >
+                        <div className="text-sm font-medium text-foreground">{ins.nome}</div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Necessário
+                          </div>
+                          <div
+                            className={cn(
+                              "text-sm font-medium tabular-nums",
+                              ins.falta ? "text-destructive" : "text-foreground",
+                            )}
+                          >
+                            {num(ins.qtd_prevista, 3)} {ins.unidade}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Em estoque
+                          </div>
+                          <div className="text-sm tabular-nums text-muted-foreground">
+                            {num(ins.estoque_atual, 3)} {ins.unidade}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Custo
+                          </div>
+                          <div className="text-sm tabular-nums text-foreground">
+                            {brl(ins.custo)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </>
           )}
         </div>
