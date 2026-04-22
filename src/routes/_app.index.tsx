@@ -80,10 +80,12 @@ function useDashboardData() {
       const diasFechados = fechData.length || 1;
       const totalPessoasFech = fechData.reduce((a, f) => a + Number(f.pessoas_reais), 0);
       const mediaPessoasDia = totalPessoasFech / diasFechados || 180;
+      // Ticket médio realista do buffet: R$84,90 (com taxa de reserva abatida)
+      const TICKET_BUFFET_PADRAO = 84.9;
       const mediaTicket =
         totalPessoasFech > 0
           ? fechData.reduce((a, f) => a + Number(f.faturamento_real), 0) / totalPessoasFech
-          : 89.9;
+          : TICKET_BUFFET_PADRAO;
 
       const cardapioFichaIds = new Set(cardapioData.map((c) => c.ficha_id));
       const cmvPrevistoPorPessoa = paramsData
@@ -204,7 +206,7 @@ function DashboardPage() {
           hint={
             isLoading
               ? ""
-              : "vs. CMV mercado de 35%"
+              : `vs benchmark mercado 35% · CMV real ${(data?.cmvRealMedio ?? 0).toFixed(1)}%`
           }
           accent="success"
         />
