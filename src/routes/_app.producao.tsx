@@ -70,6 +70,58 @@ function ProducaoPage() {
     },
   });
 
+  // Insumos consolidados previstos para a ordem (somando todas as fichas)
+  const { data: insumosPrevistos = [] } = useQuery({
+    queryKey: ["ordem-insumos-previstos", ordemAtiva?.id],
+    enabled: !!ordemAtiva?.id && itens.length > 0,
+    queryFn: async () => {
+      const fichaIds = itens.map((i) => i.ficha_id);
+      const [fichasRes, ingredRes, insumosRes] = await Promise.all([
+        supabase.from("fichas_tecnicas").select("id, rendimento_porcoes").in("id", fichaIds),
+        supabase
+          .from("ficha_itens")
+          .select("ficha_id, insumo_id, quantidade, unidade")
+          .in("ficha_id", fichaIds),
+        supabase
+          .from("insumos")
+          .select("id, nome, unidade, estoque_atual, custo_medio, ponto_reposicao"),
+      ]);
+      const fichas = new Map((fichasRes.data ?? []).map((f) => [f.id, Number(f.rendimento_porcoes)]));
+      const insumosMap = new Map((insumosRes.data ?? []).map((i) => [i.id, i]));
+      const agg = new Map<string, { qtd: number; custo: number }>();
+
+      for (const it of itens) {
+        const rend = fichas.get(it.ficha_id) ?? 1;
+        const porcoes = Number(it.porcoes_previstas);
+        const ingred = (ingredRes.data ?? []).filter((g) => g.ficha_id === it.ficha_id);
+        for (const g of ingred) {
+          const consumo = (Number(g.quantidade) / rend) * porcoes;
+          const ins = insumosMap.get(g.insumo_id);
+          if (!ins) continue;
+          const cur = agg.get(g.insumo_id) ?? { qtd: 0, custo: 0 };
+          cur.qtd += consumo;
+          cur.custo += consumo * Number(ins.custo_medio);
+          agg.set(g.insumo_id, cur);
+        }
+      }
+      return Array.from(agg.entries())
+        .map(([insumo_id, v]) => {
+          const ins = insumosMap.get(insumo_id)!;
+          const falta = v.qtd > Number(ins.estoque_atual);
+          return {
+            insumo_id,
+            nome: ins.nome,
+            unidade: ins.unidade,
+            qtd_prevista: v.qtd,
+            estoque_atual: Number(ins.estoque_atual),
+            custo: v.custo,
+            falta,
+          };
+        })
+        .sort((a, b) => (a.falta === b.falta ? b.custo - a.custo : a.falta ? -1 : 1));
+    },
+  });
+
   return (
     <div>
       <PageHeader
