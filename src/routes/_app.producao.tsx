@@ -70,6 +70,58 @@ function ProducaoPage() {
     },
   });
 
+  // Insumos consolidados previstos para a ordem (somando todas as fichas)
+  const { data: insumosPrevistos = [] } = useQuery({
+    queryKey: ["ordem-insumos-previstos", ordemAtiva?.id],
+    enabled: !!ordemAtiva?.id && itens.length > 0,
+    queryFn: async () => {
+      const fichaIds = itens.map((i) => i.ficha_id);
+      const [fichasRes, ingredRes, insumosRes] = await Promise.all([
+        supabase.from("fichas_tecnicas").select("id, rendimento_porcoes").in("id", fichaIds),
+        supabase
+          .from("ficha_itens")
+          .select("ficha_id, insumo_id, quantidade, unidade")
+          .in("ficha_id", fichaIds),
+        supabase
+          .from("insumos")
+          .select("id, nome, unidade, estoque_atual, custo_medio, ponto_reposicao"),
+      ]);
+      const fichas = new Map((fichasRes.data ?? []).map((f) => [f.id, Number(f.rendimento_porcoes)]));
+      const insumosMap = new Map((insumosRes.data ?? []).map((i) => [i.id, i]));
+      const agg = new Map<string, { qtd: number; custo: number }>();
+
+      for (const it of itens) {
+        const rend = fichas.get(it.ficha_id) ?? 1;
+        const porcoes = Number(it.porcoes_previstas);
+        const ingred = (ingredRes.data ?? []).filter((g) => g.ficha_id === it.ficha_id);
+        for (const g of ingred) {
+          const consumo = (Number(g.quantidade) / rend) * porcoes;
+          const ins = insumosMap.get(g.insumo_id);
+          if (!ins) continue;
+          const cur = agg.get(g.insumo_id) ?? { qtd: 0, custo: 0 };
+          cur.qtd += consumo;
+          cur.custo += consumo * Number(ins.custo_medio);
+          agg.set(g.insumo_id, cur);
+        }
+      }
+      return Array.from(agg.entries())
+        .map(([insumo_id, v]) => {
+          const ins = insumosMap.get(insumo_id)!;
+          const falta = v.qtd > Number(ins.estoque_atual);
+          return {
+            insumo_id,
+            nome: ins.nome,
+            unidade: ins.unidade,
+            qtd_prevista: v.qtd,
+            estoque_atual: Number(ins.estoque_atual),
+            custo: v.custo,
+            falta,
+          };
+        })
+        .sort((a, b) => (a.falta === b.falta ? b.custo - a.custo : a.falta ? -1 : 1));
+    },
+  });
+
   return (
     <div>
       <PageHeader
@@ -230,6 +282,87 @@ function ProducaoPage() {
                     </div>
                   ))}
                 </div>
+              </Card>
+
+              {/* Insumos previstos consolidados */}
+              <Card className="mt-6 border-border/60 bg-gradient-surface">
+                <button
+                  type="button"
+                  onClick={() => setShowInsumos((v) => !v)}
+                  className="flex w-full items-center justify-between border-b border-border/60 px-6 py-4 text-left hover:bg-muted/20"
+                >
+                  <div className="flex items-center gap-2">
+                    <Package2 className="h-4 w-4 text-accent" />
+                    <h3 className="font-display text-lg text-foreground">
+                      Insumos previstos para separação — {insumosPrevistos.length} itens
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {insumosPrevistos.some((i) => i.falta) && (
+                      <span className="rounded-md bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-destructive">
+                        {insumosPrevistos.filter((i) => i.falta).length} em falta
+                      </span>
+                    )}
+                    <Link
+                      to="/separacao"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <ClipboardList className="h-3 w-3" /> Abrir separação
+                    </Link>
+                    {showInsumos ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </button>
+                {showInsumos && (
+                  <div className="divide-y divide-border/50">
+                    {insumosPrevistos.length === 0 && (
+                      <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+                        Nenhum insumo cadastrado nas fichas desta ordem.
+                      </div>
+                    )}
+                    {insumosPrevistos.map((ins) => (
+                      <div
+                        key={ins.insumo_id}
+                        className="grid grid-cols-1 gap-2 px-6 py-3 md:grid-cols-[1fr_140px_140px_120px] md:items-center"
+                      >
+                        <div className="text-sm font-medium text-foreground">{ins.nome}</div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Necessário
+                          </div>
+                          <div
+                            className={cn(
+                              "text-sm font-medium tabular-nums",
+                              ins.falta ? "text-destructive" : "text-foreground",
+                            )}
+                          >
+                            {num(ins.qtd_prevista, 3)} {ins.unidade}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Em estoque
+                          </div>
+                          <div className="text-sm tabular-nums text-muted-foreground">
+                            {num(ins.estoque_atual, 3)} {ins.unidade}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Custo
+                          </div>
+                          <div className="text-sm tabular-nums text-foreground">
+                            {brl(ins.custo)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             </>
           )}
