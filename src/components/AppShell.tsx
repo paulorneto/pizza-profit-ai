@@ -167,6 +167,10 @@ export function AppShell() {
             >
               <Menu className="h-5 w-5" />
             </button>
+            <Link to="/" className="md:hidden flex items-center gap-2 min-w-0">
+              <img src={logoLlum} alt="LLUM" className="h-7 w-auto shrink-0" />
+              <span className="font-display text-sm tracking-tight text-foreground">LLUM OS</span>
+            </Link>
             <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Sparkles className="h-3 w-3 text-primary" />
               <span className="uppercase tracking-wider font-medium">LLUM OS</span>
